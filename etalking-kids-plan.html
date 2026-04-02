@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>eTalking 兒童方案試算 — 找到最適合孩子的課程計畫</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F7F5F0;
+    --surface: #FFFFFF;
+    --surface2: #F0EDE6;
+    --border: rgba(0,0,0,0.08);
+    --border-strong: rgba(0,0,0,0.15);
+    --text: #1A1A18;
+    --text-muted: #6B6860;
+    --text-faint: #9A9890;
+    --accent: #2B5F3F;
+    --accent-light: #EAF4EE;
+    --accent-text: #1D4A30;
+    --warn: #8B4513;
+    --warn-light: #FDF0E8;
+    --info: #1A4A7A;
+    --info-light: #E8F0FA;
+    --tag-bg: #EDEAE2;
+    --tag-text: #4A4840;
+    --rec-border: #2B5F3F;
+    --radius: 10px;
+    --radius-lg: 16px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Noto Sans TC', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    line-height: 1.6;
+  }
+
+  /* ── Header ── */
+  header {
+    background: var(--accent);
+    color: #fff;
+    padding: 2.5rem 1.5rem 2rem;
+    text-align: center;
+  }
+  header .eyebrow {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.6);
+    margin-bottom: 10px;
+  }
+  header h1 {
+    font-size: clamp(22px, 5vw, 32px);
+    font-weight: 700;
+    line-height: 1.25;
+    margin-bottom: 8px;
+  }
+  header p {
+    font-size: 14px;
+    color: rgba(255,255,255,0.75);
+    max-width: 480px;
+    margin: 0 auto;
+  }
+
+  /* ── Main layout ── */
+  main {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 2rem 1rem 4rem;
+  }
+
+  /* ── Controls ── */
+  .controls {
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border);
+    padding: 1.25rem 1.25rem 1rem;
+    margin-bottom: 1.25rem;
+  }
+  .ctrl-block { margin-bottom: 1rem; }
+  .ctrl-block:last-child { margin-bottom: 0; }
+  .ctrl-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-muted);
+    letter-spacing: 0.04em;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+  }
+  .seg {
+    display: flex;
+    gap: 0;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .seg button {
+    font-family: 'Noto Sans TC', sans-serif;
+    font-size: 13px;
+    padding: 7px 18px;
+    border: 1px solid var(--border-strong);
+    background: var(--surface);
+    color: var(--text-muted);
+    border-radius: 99px;
+    cursor: pointer;
+    transition: all .15s;
+    font-weight: 400;
+  }
+  .seg button:hover { background: var(--surface2); color: var(--text); }
+  .seg button.active {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+    font-weight: 500;
+  }
+
+  /* ── Metrics row ── */
+  .metrics {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 1.25rem;
+  }
+  @media(max-width: 480px) {
+    .metrics { grid-template-columns: 1fr 1fr; }
+    .metrics .metric:last-child { grid-column: span 2; }
+  }
+  .metric {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px 14px;
+  }
+  .metric .lbl { font-size: 11px; color: var(--text-faint); margin-bottom: 4px; }
+  .metric .val { font-size: 22px; font-weight: 700; line-height: 1; }
+  .metric .sub { font-size: 11px; color: var(--text-muted); margin-top: 3px; }
+
+  /* ── Plan cards ── */
+  .cards { display: flex; flex-direction: column; gap: 10px; }
+
+  .plan-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1.1rem 1.2rem;
+    transition: box-shadow .2s;
+  }
+  .plan-card:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.07); }
+  .plan-card.recommended {
+    border: 2px solid var(--rec-border);
+  }
+
+  .card-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+  }
+  .plan-name { font-size: 16px; font-weight: 700; }
+
+  .badge {
+    font-size: 11px;
+    font-weight: 500;
+    padding: 3px 9px;
+    border-radius: 99px;
+  }
+  .b-rec { background: var(--accent-light); color: var(--accent-text); }
+  .b-warn { background: var(--warn-light); color: var(--warn); }
+  .b-muted { background: var(--tag-bg); color: var(--tag-text); }
+  .b-12m { background: var(--info-light); color: var(--info); }
+
+  .detail-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 5px 16px;
+    font-size: 13px;
+    margin-bottom: 12px;
+  }
+  .detail-grid .k { color: var(--text-muted); }
+  .detail-grid .v { font-weight: 500; text-align: right; }
+
+  .sep { height: 1px; background: var(--border); margin: 10px 0; }
+
+  /* ── Progress bars ── */
+  .bars { display: flex; flex-direction: column; gap: 6px; }
+  .bar-row { display: flex; align-items: center; gap: 8px; }
+  .bar-key { font-size: 11px; color: var(--text-muted); min-width: 64px; }
+  .bar-track {
+    flex: 1;
+    height: 7px;
+    background: var(--surface2);
+    border-radius: 99px;
+    overflow: hidden;
+  }
+  .bar-fill {
+    height: 100%;
+    border-radius: 99px;
+    transition: width .4s ease;
+  }
+  .bar-val { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--text-muted); min-width: 36px; text-align: right; }
+
+  .card-note {
+    font-size: 12px;
+    margin-top: 8px;
+    padding: 7px 10px;
+    border-radius: var(--radius);
+    line-height: 1.55;
+  }
+  .card-note.good { background: var(--accent-light); color: var(--accent-text); }
+  .card-note.caution { background: var(--warn-light); color: var(--warn); }
+
+  /* ── Footer note ── */
+  .footnote {
+    margin-top: 1.5rem;
+    padding: 1rem 1.2rem;
+    background: var(--surface2);
+    border-radius: var(--radius);
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.7;
+  }
+  .footnote strong { color: var(--text); font-weight: 500; }
+
+  /* ── Section label ── */
+  .section-label {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    margin: 1.5rem 0 0.6rem;
+  }
+
+  footer {
+    text-align: center;
+    padding: 1.5rem;
+    font-size: 12px;
+    color: var(--text-faint);
+    border-top: 1px solid var(--border);
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="eyebrow">eTalking 課程規劃工具</div>
+  <h1>找到最適合孩子的方案</h1>
+  <p>依照每週上課堂數，自動試算各方案的進度完成時間與利用率</p>
+</header>
+
+<main>
+
+  <div class="controls">
+    <div class="ctrl-block">
+      <div class="ctrl-label">孩子每週上幾堂？</div>
+      <div class="seg" id="seg-lessons">
+        <button onclick="setLessons(1)">每週 1 堂</button>
+        <button onclick="setLessons(2)" class="active">每週 2 堂</button>
+        <button onclick="setLessons(3)">每週 3 堂</button>
+        <button onclick="setLessons(4)">每週 4 堂</button>
+      </div>
+    </div>
+    <div class="ctrl-block">
+      <div class="ctrl-label">孩子的年齡層</div>
+      <div class="seg" id="seg-type">
+        <button onclick="setType('kids')" class="active">Kids 兒童（小學）</button>
+        <button onclick="setType('junior')">Junior 國高中</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="metrics" id="metrics"></div>
+
+  <div class="section-label" id="cards-label">方案比較</div>
+  <div class="cards" id="cards"></div>
+
+  <div class="footnote" id="footnote"></div>
+
+</main>
+
+<footer>
+  eTalking 課程方案試算工具 &nbsp;·&nbsp; 資料以官方報價為準，本工具僅供參考
+</footer>
+
+<script>
+const PLANS = {
+  kids: [
+    { name: '體驗學', months: 12, progress: 40, elective: 5, magic: 20, price: 38400, monthly: 3200 },
+    { name: '輕鬆學', months: 24, progress: 80, elective: 15, magic: 25, price: 68400, monthly: 2850 },
+    { name: '進階學', months: 24, progress: 120, elective: 25, magic: 30, price: 92400, monthly: 3850 },
+    { name: '小夢想家', months: 24, progress: 160, elective: 40, magic: 40, price: 116400, monthly: 4850 },
+    { name: '大夢想家', months: 24, progress: 200, elective: 50, magic: 45, price: 140400, monthly: 5850 },
+  ],
+  junior: [
+    { name: '輕鬆學', months: 24, progress: 80, elective: 20, magic: 0, price: 68400, monthly: null },
+    { name: '進階學', months: 24, progress: 120, elective: 30, magic: 0, price: 92400, monthly: null },
+    { name: '小夢想家', months: 24, progress: 160, elective: 46, magic: 0, price: 116400, monthly: null },
+    { name: '大夢想家', months: 24, progress: 200, elective: 60, magic: 0, price: 140400, monthly: null },
+  ]
+};
+
+let lessonsPerWeek = 2;
+let planType = 'kids';
+
+function setLessons(n) {
+  lessonsPerWeek = n;
+  document.querySelectorAll('#seg-lessons button').forEach((b, i) => b.classList.toggle('active', i === n - 1));
+  render();
+}
+
+function setType(t) {
+  planType = t;
+  document.querySelectorAll('#seg-type button').forEach((b, i) => b.classList.toggle('active', (i === 0 && t === 'kids') || (i === 1 && t === 'junior')));
+  render();
+}
+
+function formatDuration(months) {
+  if (months < 1) return '不足1個月';
+  if (months < 12) return Math.round(months) + ' 個月';
+  const y = Math.floor(months / 12), m = Math.round(months % 12);
+  return m === 0 ? y + ' 年' : y + ' 年 ' + m + ' 個月';
+}
+
+function bookCount(progress) {
+  const n = progress / 100;
+  if (n >= 2) return Math.floor(n) + '–' + Math.ceil(n) + ' 本課本';
+  if (n === 1) return '約 1 本課本';
+  if (n >= 0.5) return '不足 1 本課本';
+  return '課本未完成';
+}
+
+function render() {
+  const plans = PLANS[planType];
+  const weeksPerYear = 52;
+  const contractWeeks24 = 24 * 4.33;
+
+  // Available progress in full contract period
+  const maxProgress24 = Math.round(lessonsPerWeek * weeksPerYear * 2);
+  const maxProgress12 = Math.round(lessonsPerWeek * weeksPerYear);
+
+  // Metrics
+  document.getElementById('metrics').innerHTML = `
+    <div class="metric">
+      <div class="lbl">每週上課</div>
+      <div class="val">${lessonsPerWeek} 堂</div>
+      <div class="sub">年均 ${lessonsPerWeek * 52} 堂進度</div>
+    </div>
+    <div class="metric">
+      <div class="lbl">完成 100 堂進度</div>
+      <div class="val">${formatDuration(Math.ceil(100 / lessonsPerWeek / 4.33))}</div>
+      <div class="sub">= 約 1 本課本</div>
+    </div>
+    <div class="metric">
+      <div class="lbl">24 個月可上進度</div>
+      <div class="val">${maxProgress24} 堂</div>
+      <div class="sub">不含寒暑假等緩衝</div>
+    </div>
+  `;
+
+  const cardsEl = document.getElementById('cards');
+  cardsEl.innerHTML = '';
+
+  plans.forEach(plan => {
+    const maxProgress = plan.months === 12 ? maxProgress12 : maxProgress24;
+    const weeksNeeded = plan.progress / lessonsPerWeek;
+    const monthsNeeded = weeksNeeded / 4.33;
+    const utilization = Math.round((plan.progress / maxProgress) * 100);
+    const finishesInTime = monthsNeeded <= plan.months;
+    const timeRatio = Math.min(monthsNeeded / plan.months, 1);
+
+    const isRec = utilization >= 65 && utilization <= 105 && finishesInTime;
+    const isOver = plan.progress > maxProgress;
+
+    const monthlyStr = plan.monthly ? `月付 $${plan.monthly.toLocaleString()}` : '限一次付清';
+
+    const card = document.createElement('div');
+    card.className = 'plan-card' + (isRec ? ' recommended' : '');
+
+    let badgeHTML = '';
+    if (isRec) badgeHTML += `<span class="badge b-rec">✓ 推薦</span>`;
+    else if (isOver) badgeHTML += `<span class="badge b-warn">進度不足</span>`;
+    else if (utilization < 50) badgeHTML += `<span class="badge b-muted">進度有剩餘</span>`;
+    else badgeHTML += `<span class="badge b-muted">可考慮</span>`;
+    if (plan.months === 12) badgeHTML += `<span class="badge b-12m">12 個月方案</span>`;
+
+    const magicLine = plan.magic > 0
+      ? `<span class="k">魔法屋</span><span class="v">${plan.magic} 堂</span>`
+      : `<span class="k">魔法屋</span><span class="v">—</span>`;
+
+    let noteHTML = '';
+    if (isRec) {
+      noteHTML = `<div class="card-note good">進度約 ${formatDuration(monthsNeeded)} 內完成，合約期內用完剛剛好，適合每週穩定上 ${lessonsPerWeek} 堂的孩子。</div>`;
+    } else if (isOver) {
+      noteHTML = `<div class="card-note caution">每週 ${lessonsPerWeek} 堂在 ${plan.months} 個月內最多可上 ${maxProgress} 堂進度，此方案 ${plan.progress} 堂進度無法在合約期內用完。</div>`;
+    }
+
+    const fillColor = isRec ? '#2B5F3F' : isOver ? '#C0392B' : '#9A9890';
+    const fillColor2 = utilization >= 65 ? '#2B5F3F' : '#B4B2A9';
+
+    card.innerHTML = `
+      <div class="card-head">
+        <span class="plan-name">${plan.name}</span>
+        ${badgeHTML}
+      </div>
+      <div class="detail-grid">
+        <span class="k">總價</span><span class="v">$${plan.price.toLocaleString()}</span>
+        <span class="k">付款方式</span><span class="v">${monthlyStr}</span>
+        <span class="k">合約期</span><span class="v">${plan.months} 個月</span>
+        <span class="k">進度堂數</span><span class="v">${plan.progress} 堂（${bookCount(plan.progress)}）</span>
+        <span class="k">選修課</span><span class="v">${plan.elective} 堂</span>
+        ${magicLine}
+      </div>
+      <div class="sep"></div>
+      <div class="bars">
+        <div class="bar-row">
+          <span class="bar-key">完成進度</span>
+          <div class="bar-track"><div class="bar-fill" style="width:${Math.min(timeRatio * 100, 100)}%;background:${fillColor}"></div></div>
+          <span class="bar-val">${formatDuration(monthsNeeded)}</span>
+        </div>
+        <div class="bar-row">
+          <span class="bar-key">進度利用率</span>
+          <div class="bar-track"><div class="bar-fill" style="width:${Math.min(utilization, 100)}%;background:${fillColor2}"></div></div>
+          <span class="bar-val">${Math.min(utilization, 999)}%</span>
+        </div>
+      </div>
+      ${noteHTML}
+    `;
+
+    cardsEl.appendChild(card);
+  });
+
+  document.getElementById('footnote').innerHTML = `
+    <strong>計算說明</strong><br>
+    進度利用率 = 方案進度堂數 ÷ 合約內可上進度堂數（每週 ${lessonsPerWeek} 堂 × 52 週 × 合約年數）。
+    選修課與魔法屋屬彈性加強課，未納入進度計算。
+    一本課本以 100 堂進度估算。實際進度因孩子程度與假期安排而異，建議保留 10–15% 緩衝。
+  `;
+}
+
+render();
+</script>
+</body>
+</html>
