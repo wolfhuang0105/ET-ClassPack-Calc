@@ -1,0 +1,1185 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>eTalking Kids 課程計算器</title>
+<style>
+:root{
+  --bg:#f7f6f3;--surface:#ffffff;--surface2:#f0efe9;--surface3:#e8e7e0;
+  --text:#1a1a18;--text2:#5c5b57;--text3:#9c9b96;
+  --blue:#185FA5;--blue-light:#E6F1FB;--blue-dark:#042C53;--blue-mid:#B5D4F4;
+  --green:#3B6D11;--green-light:#EAF3DE;
+  --amber:#BA7517;--amber-light:#FAEEDA;
+  --red:#A32D2D;--red-light:#FCEBEB;
+  --border:rgba(26,26,24,0.12);--border2:rgba(26,26,24,0.22);
+  --radius:8px;--radius-lg:12px;--radius-xl:16px;
+  --shadow:0 1px 3px rgba(0,0,0,0.08);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang TC','Microsoft JhengHei',sans-serif;
+  background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;min-height:100vh}
+.app{max-width:880px;margin:0 auto;padding:24px 16px}
+h1{font-size:20px;font-weight:600;color:var(--text);margin-bottom:4px}
+.subtitle{font-size:13px;color:var(--text3);margin-bottom:24px}
+
+/* Section headers */
+.sec{margin-bottom:20px}
+.sec-label{font-size:11px;font-weight:600;letter-spacing:.08em;color:var(--text3);text-transform:uppercase;margin-bottom:10px}
+
+/* Plan selector */
+.plan-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.plan-btn{background:var(--surface);border:0.5px solid var(--border);border-radius:var(--radius);
+  padding:12px 8px;cursor:pointer;text-align:center;transition:all .15s;user-select:none}
+.plan-btn:hover{border-color:var(--border2)}
+.plan-btn.active{border:2px solid var(--blue);background:var(--blue-light)}
+.plan-btn .pn{font-size:13px;font-weight:600;display:block;color:var(--text)}
+.plan-btn .pm{font-size:11px;color:var(--text3);margin-top:2px}
+.plan-btn .pp{font-size:12px;color:var(--blue);margin-top:5px;font-weight:600}
+
+/* Two-column layout */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px}
+
+/* Cards */
+.card{background:var(--surface);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:16px}
+.card-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:12px;display:flex;align-items:center;gap:6px}
+
+/* Toggles */
+.toggle-list{display:flex;flex-direction:column;gap:10px}
+.toggle-row{display:flex;align-items:center;gap:10px}
+.toggle-row.disabled{opacity:.4;pointer-events:none}
+.sw{width:36px;height:20px;background:var(--surface3);border-radius:10px;position:relative;
+  cursor:pointer;transition:background .15s;flex-shrink:0;border:0.5px solid var(--border)}
+.sw.on{background:var(--blue);border-color:var(--blue)}
+.sw::after{content:'';position:absolute;left:2px;top:2px;width:15px;height:15px;
+  background:#fff;border-radius:50%;transition:left .15s;box-shadow:0 1px 2px rgba(0,0,0,.2)}
+.sw.on::after{left:19px}
+.tog-info{flex:1}
+.tog-main{font-size:13px;color:var(--text);font-weight:500}
+.tog-sub{font-size:11px;color:var(--text3);margin-top:1px}
+.tog-badge{font-size:11px;background:var(--blue-light);color:var(--blue);
+  padding:2px 8px;border-radius:20px;font-weight:600;white-space:nowrap}
+
+/* Frequency */
+.freq-wrap{margin-bottom:14px}
+.freq-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.freq-val{font-size:16px;font-weight:700;color:var(--blue)}
+input[type=range]{width:100%;height:4px;appearance:none;background:var(--surface3);
+  border-radius:2px;outline:none;cursor:pointer}
+input[type=range]::-webkit-slider-thumb{appearance:none;width:18px;height:18px;
+  border-radius:50%;background:var(--blue);cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.freq-labels{display:flex;justify-content:space-between;margin-top:4px}
+.freq-labels span{font-size:10px;color:var(--text3)}
+
+/* Diligence note */
+.dil-badge{font-size:12px;background:var(--green-light);color:var(--green);
+  padding:6px 10px;border-radius:var(--radius);border:0.5px solid rgba(59,109,17,.2);
+  display:flex;align-items:flex-start;gap:6px;margin-top:10px}
+.dil-badge.warn{background:var(--amber-light);color:var(--amber);border-color:rgba(186,117,23,.2)}
+.dil-dot{width:6px;height:6px;border-radius:50%;background:currentColor;margin-top:3px;flex-shrink:0}
+
+/* Magic conversion */
+.magic-conv{background:var(--surface2);border-radius:var(--radius);padding:12px;margin-bottom:12px}
+.mc-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.mc-title{font-size:12px;font-weight:600;color:var(--text2)}
+.mc-result{font-size:12px;color:var(--blue);font-weight:600}
+.mc-rule{font-size:11px;color:var(--text3);margin-top:6px;text-align:center}
+
+/* Breakdown cards */
+.breakdown-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.bc{background:var(--surface2);border-radius:var(--radius);padding:12px}
+.bc-label{font-size:11px;color:var(--text3);font-weight:500;margin-bottom:6px}
+.bc-formula{font-size:12px;color:var(--text2);line-height:1.6}
+.bc-formula .base{color:var(--text);font-weight:600}
+.bc-formula .bonus{color:var(--blue)}
+.bc-formula .minus{color:var(--red)}
+.bc-formula .total{font-size:18px;font-weight:700;color:var(--text);display:block;margin-top:2px}
+.bc-formula .eq{color:var(--text3)}
+
+/* Totals row */
+.totals-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
+.tc{background:var(--surface2);border-radius:var(--radius);padding:12px;text-align:center}
+.tc-label{font-size:11px;color:var(--text3);margin-bottom:4px}
+.tc-val{font-size:22px;font-weight:700;color:var(--text)}
+.tc-unit{font-size:12px;font-weight:400;color:var(--text3)}
+
+/* Price box */
+.price-box{background:var(--blue-light);border-radius:var(--radius);padding:14px}
+.price-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.pv{text-align:center}
+.pv-label{font-size:11px;color:var(--blue);margin-bottom:4px}
+.pv-val{font-size:20px;font-weight:700;color:var(--blue-dark)}
+.pv-unit{font-size:11px;color:var(--blue)}
+.pv-divider{border:none;border-left:1px solid var(--blue-mid);height:36px;margin:auto}
+
+/* Activity config panel */
+.act-panel{background:var(--surface);border:0.5px solid var(--border);border-radius:var(--radius-lg);margin-bottom:20px;overflow:hidden}
+.act-header{padding:14px 16px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none}
+.act-header:hover{background:var(--surface2)}
+.act-title{font-size:13px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:8px}
+.act-chevron{font-size:16px;color:var(--text3);transition:transform .2s}
+.act-chevron.open{transform:rotate(180deg)}
+.act-body{padding:0 16px 16px;border-top:0.5px solid var(--border)}
+.act-meta{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0 12px}
+.inp-group{display:flex;flex-direction:column;gap:4px}
+.inp-label{font-size:11px;color:var(--text3);font-weight:500}
+input[type=text],input[type=date]{width:100%;padding:7px 10px;border:0.5px solid var(--border2);
+  border-radius:var(--radius);font-size:13px;background:var(--surface);color:var(--text);outline:none}
+input[type=text]:focus,input[type=date]:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(24,95,165,.1)}
+
+/* Activity table */
+.act-table{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:12px}
+.act-table th{font-size:11px;font-weight:600;color:var(--text3);text-align:left;
+  padding:6px 8px;border-bottom:1px solid var(--border);background:var(--surface2)}
+.act-table td{padding:7px 8px;border-bottom:0.5px solid var(--border);vertical-align:middle}
+.act-table td input[type=number]{width:70px;padding:4px 7px;border:0.5px solid var(--border2);
+  border-radius:5px;font-size:12px;background:var(--surface);color:var(--text);outline:none}
+.act-table td input[type=number]:focus{border-color:var(--blue)}
+.act-table td input[type=text]{padding:4px 7px;font-size:12px}
+.act-table tr:last-child td{border-bottom:none}
+.plan-badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;
+  font-weight:600;background:var(--surface2);color:var(--text2)}
+
+/* JSON buttons */
+.json-row{display:flex;gap:8px;flex-wrap:wrap}
+.btn{padding:7px 14px;border:0.5px solid var(--border2);border-radius:var(--radius);
+  font-size:12px;font-weight:500;cursor:pointer;background:var(--surface);color:var(--text);
+  transition:all .12s;display:flex;align-items:center;gap:5px}
+.btn:hover{background:var(--surface2);border-color:var(--blue);color:var(--blue)}
+.btn.primary{background:var(--blue);color:#fff;border-color:var(--blue)}
+.btn.primary:hover{background:#0F4A8A}
+.btn.danger{color:var(--red)}
+.btn.danger:hover{background:var(--red-light);border-color:var(--red)}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
+  background:#1a1a18;color:#fff;padding:8px 16px;border-radius:20px;font-size:13px;
+  opacity:0;pointer-events:none;transition:opacity .2s;z-index:999}
+.toast.show{opacity:1}
+
+/* Book progress */
+.book-progress{background:var(--surface2);border-radius:var(--radius);padding:11px 12px;margin-top:12px}
+.bp-title{font-size:11px;font-weight:600;color:var(--text3);margin-bottom:8px;letter-spacing:.04em;text-transform:uppercase}
+.bp-row{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px}
+.bp-label{font-size:12px;color:var(--text2)}
+.bp-val{font-size:13px;font-weight:600;color:var(--text)}
+.bp-formula{font-size:11px;color:var(--text3);margin-top:2px;font-style:italic}
+.bp-bar-wrap{margin-top:8px}
+.bp-bar-label{display:flex;justify-content:space-between;font-size:10px;color:var(--text3);margin-bottom:3px}
+.bp-bar{height:6px;background:var(--surface3);border-radius:3px;overflow:hidden}
+.bp-bar-fill{height:100%;background:var(--blue);border-radius:3px;transition:width .3s}
+.bp-books{display:flex;gap:4px;margin-top:8px;flex-wrap:wrap}
+.book-chip{font-size:11px;padding:2px 7px;border-radius:4px;font-weight:600}
+.book-chip.full{background:var(--blue-light);color:var(--blue)}
+.book-chip.partial{background:var(--surface3);color:var(--text3)}
+.book-chip.over{background:var(--red-light);color:var(--red)}
+.bp-bar{height:6px;background:var(--surface3);border-radius:3px;overflow:visible;position:relative}
+.bp-bar-fill{height:100%;border-radius:3px;transition:width .3s}
+.bp-bar-cap{position:absolute;top:-3px;width:2px;height:12px;background:var(--red);border-radius:1px;transform:translateX(-1px)}
+.bp-overflow-warn{margin-top:10px;border:1px solid rgba(186,117,23,.35);border-radius:var(--radius);overflow:hidden}
+.bow-header{background:var(--amber-light);padding:8px 11px;display:flex;align-items:center;gap:7px}
+.bow-icon{font-size:14px;color:var(--amber)}
+.bow-title{font-size:12px;font-weight:600;color:var(--amber)}
+.bow-detail{padding:8px 11px;font-size:12px;color:var(--text2);line-height:1.6;border-bottom:0.5px solid rgba(186,117,23,.2)}
+.bow-detail strong{color:var(--amber);font-weight:700}
+.bow-upgrade{padding:8px 11px;font-size:12px;font-weight:600;color:var(--blue);
+  cursor:pointer;display:flex;justify-content:space-between;align-items:center;
+  background:var(--blue-light);transition:background .12s}
+.bow-upgrade:hover{background:var(--blue-mid)}
+.bow-arrow{font-size:14px}
+.bp-bidir{display:flex;flex-direction:column;gap:8px;margin-bottom:4px}
+.bp-dir{background:var(--surface);border:0.5px solid var(--border);border-radius:var(--radius);padding:9px 11px}
+.bp-dir.warn{border-color:rgba(186,117,23,.4);background:var(--amber-light)}
+.bp-dir.ok{border-color:rgba(59,109,17,.3);background:var(--green-light)}
+.bp-dir-label{font-size:11px;font-weight:600;color:var(--text3);display:block;margin-bottom:3px}
+.bp-dir-val{font-size:14px;font-weight:700;display:block;margin-bottom:2px}
+.bow-upgrade-none{padding:8px 11px;font-size:11px;color:var(--text3)}
+.wpm-btn{padding:3px 9px;font-size:11px;font-weight:500;border:0.5px solid var(--border2);
+  border-radius:20px;background:var(--surface);color:var(--text2);cursor:pointer;transition:all .12s}
+.wpm-btn.active{background:var(--blue);color:#fff;border-color:var(--blue)}
+.wpm-btn:hover:not(.active){background:var(--surface2)}
+.gift-opt{padding:4px 10px;font-size:12px;font-weight:500;border:0.5px solid var(--border2);
+  border-radius:20px;background:var(--surface);color:var(--text2);cursor:pointer;transition:all .12s;
+  display:flex;align-items:center;gap:4px;white-space:nowrap}
+.gift-opt.active{background:var(--blue);color:#fff;border-color:var(--blue)}
+.gift-opt:hover:not(.active){background:var(--surface2);border-color:var(--blue);color:var(--blue)}
+.bidir-consumed{font-size:20px;font-weight:700;color:var(--text)}
+.bidir-row{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px;margin-bottom:4px}
+
+/* Reference panels */
+.ref-panel{background:var(--surface);border:0.5px solid var(--border);border-radius:var(--radius-lg);margin-bottom:10px;overflow:hidden}
+.ref-header{padding:13px 16px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none;transition:background .12s}
+.ref-header:hover{background:var(--surface2)}
+.ref-title{font-size:13px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:8px}
+.ref-icon{font-size:15px}
+.ref-chev{font-size:15px;color:var(--text3);transition:transform .2s}
+.ref-chev.open{transform:rotate(180deg)}
+.ref-body{padding:0 16px 16px;border-top:0.5px solid var(--border)}
+.ref-grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}
+.ref-grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.ref-card{background:var(--surface2);border-radius:var(--radius);padding:12px}
+.ref-card.ref-card-warn{background:var(--amber-light);border:0.5px solid rgba(186,117,23,.25)}
+.ref-card-title{font-size:12px;font-weight:600;color:var(--text);margin-bottom:8px;padding-bottom:6px;border-bottom:0.5px solid var(--border)}
+.ref-item{font-size:12px;color:var(--text2);margin-bottom:5px;line-height:1.5}
+.ref-item strong{color:var(--text);font-weight:600}
+.ref-sub{font-size:11px;color:var(--text3);margin:3px 0 3px 12px;line-height:1.5}
+.ref-note{font-size:11px;color:var(--text3);font-style:italic}
+.ref-formula{background:var(--surface);border-radius:5px;padding:6px 10px;font-size:12px;font-weight:600;color:var(--blue);margin:6px 0;border:0.5px solid var(--blue-mid)}
+/* Timeline */
+.ref-timeline{margin-top:14px;display:flex;flex-direction:column;gap:0}
+.ref-tl-item{display:flex;gap:12px;padding-bottom:14px;position:relative}
+.ref-tl-item:last-child{padding-bottom:0}
+.ref-tl-item:not(:last-child)::before{content:'';position:absolute;left:7px;top:18px;bottom:0;width:1px;background:var(--border2)}
+.ref-tl-dot{width:16px;height:16px;border-radius:50%;flex-shrink:0;margin-top:2px}
+.ref-tl-dot.ok{background:var(--green)}
+.ref-tl-dot.warn{background:var(--amber)}
+.ref-tl-dot.danger{background:var(--red)}
+.ref-tl-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:5px}
+.ref-tl-body{font-size:12px;color:var(--text2);line-height:1.6}
+/* Checklist */
+.ref-section-title{font-size:11px;font-weight:600;letter-spacing:.06em;color:var(--text3);text-transform:uppercase;margin:14px 0 10px}
+.ref-checklist{display:flex;flex-direction:column;gap:8px}
+.ref-check{display:flex;gap:10px;align-items:flex-start;font-size:12px;color:var(--text2);line-height:1.5}
+.ref-check-num{width:20px;height:20px;border-radius:50%;background:var(--blue-light);color:var(--blue);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+/* Info list */
+.ref-infolist{display:flex;flex-direction:column;gap:7px}
+.ref-info-item{display:flex;flex-direction:column;gap:2px;padding:7px 10px;background:var(--surface2);border-radius:var(--radius)}
+.ref-info-label{font-size:10px;font-weight:600;color:var(--text3);letter-spacing:.04em;text-transform:uppercase}
+.ref-info-val{font-size:12px;color:var(--text2);line-height:1.5}
+.ref-info-val strong{color:var(--text)}
+
+/* Responsive */
+@media(max-width:600px){
+  .plan-grid{grid-template-columns:repeat(3,1fr)}
+  .two-col{grid-template-columns:1fr}
+  .breakdown-grid,.totals-row,.price-grid{grid-template-columns:1fr}
+  .pv-divider{display:none}
+  .ref-grid3,.ref-grid2{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <h1>eTalking Kids 課程計算器</h1>
+  <p class="subtitle">方案試算工具 — 堂數明細 × 單價比較 × 活動加贈</p>
+
+  <!-- Plan selector -->
+  <div class="sec">
+    <div class="sec-label">方案選擇</div>
+    <div class="plan-grid" id="planGrid"></div>
+  </div>
+
+  <!-- Options + Frequency — two column, right column stacks vertically -->
+  <div class="two-col" style="align-items:start">
+    <!-- LEFT: Frequency + Book Progress + Diligence -->
+    <div class="card">
+      <div class="card-title">上課頻率</div>
+      <div class="freq-wrap">
+        <div class="freq-head">
+          <span style="font-size:12px;color:var(--text3)">每週上課堂數</span>
+          <span class="freq-val" id="freqVal">2 堂/週</span>
+        </div>
+        <input type="range" id="freqSlider" min="1" max="5" value="2" step="1">
+        <div class="freq-labels">
+          <span>1堂</span><span>2堂</span><span>3堂</span><span>4堂</span><span>5堂</span>
+        </div>
+      </div>
+      <!-- Weeks per month toggle -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px;margin-bottom:2px">
+        <span style="font-size:11px;color:var(--text3)">每月週數估算基準</span>
+        <div style="display:flex;gap:4px" id="wpmBtns">
+          <button class="wpm-btn active" data-wpm="4" onclick="setWpm(4)">4 週/月</button>
+          <button class="wpm-btn" data-wpm="4.35" onclick="setWpm(4.35)">4.35 週/月</button>
+          <button class="wpm-btn" data-wpm="5" onclick="setWpm(5)">5 週/月</button>
+        </div>
+      </div>
+      <!-- Book progress -->
+      <div class="book-progress" id="bookProgress"></div>
+      <!-- Diligence toggle -->
+      <div style="border-top:0.5px solid var(--border);padding-top:12px;margin-top:12px">
+        <div class="card-title" style="margin-bottom:8px">勤學活動</div>
+        <div class="toggle-row" id="dilRow">
+          <div class="sw" id="sw-dil" onclick="toggle('dil')"></div>
+          <div class="tog-info">
+            <div class="tog-main">搭配勤學活動</div>
+            <div class="tog-sub" id="dilSub">連續8週出席加贈</div>
+          </div>
+          <span class="tog-badge" id="dilBadge" style="display:none"></span>
+        </div>
+        <div id="dilNote" style="display:none"></div>
+      </div>
+    </div>
+
+    <!-- RIGHT: 方案選項 + 課程明細 stacked -->
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <!-- Toggles -->
+      <div class="card">
+        <div class="card-title">方案選項</div>
+        <div class="toggle-list">
+          <div class="toggle-row">
+            <div class="sw" id="sw-biz" onclick="toggle('biz')"></div>
+            <div class="tog-info">
+              <div class="tog-main">業務權限加贈</div>
+              <div class="tog-sub" id="bizSub">加贈魔法屋堂數</div>
+            </div>
+            <span class="tog-badge" id="bizBadge" style="display:none"></span>
+          </div>
+          <div class="toggle-row">
+            <div class="sw" id="sw-lump" onclick="toggle('lump')"></div>
+            <div class="tog-info">
+              <div class="tog-main">一次付清</div>
+              <div class="tog-sub" id="lumpSub">加贈選修課</div>
+            </div>
+            <span class="tog-badge" id="lumpBadge" style="display:none"></span>
+          </div>
+          <div class="toggle-row" id="actToggleRow">
+            <div class="sw" id="sw-act" onclick="toggle('act')"></div>
+            <div class="tog-info">
+              <div class="tog-main" id="actToggleLabel">活動加贈</div>
+              <div class="tog-sub" id="actToggleSub">請先於「活動設定」配置</div>
+            </div>
+            <span class="tog-badge" id="actBadge" style="display:none"></span>
+          </div>
+          <!-- Gift selector: 二選一，緊接活動加贈下方 -->
+          <div id="giftSelectorRow" style="display:none;margin-left:46px;margin-top:-4px;margin-bottom:2px">
+            <div style="display:flex;gap:4px;align-items:center">
+              <span style="font-size:11px;color:var(--text3);margin-right:2px">贈品：</span>
+              <button class="gift-opt" id="giftOptMagic" onclick="setGift('magic')">
+                🏠 魔法屋 <span id="giftMagicVal"></span>
+              </button>
+              <button class="gift-opt" id="giftOptElec" onclick="setGift('elec')">
+                📚 選修 <span id="giftElecVal"></span>
+              </button>
+            </div>
+          </div>
+          <div class="toggle-row">
+            <div class="sw" id="sw-conv" onclick="toggle('conv')"></div>
+            <div class="tog-info">
+              <div class="tog-main">魔法屋 → 選修換算</div>
+              <div class="tog-sub">5堂魔法屋 = 1堂選修</div>
+            </div>
+          </div>
+        </div>
+        <!-- Magic conversion slider -->
+        <div class="magic-conv" id="magicConvPanel" style="display:none">
+          <div class="mc-head">
+            <span class="mc-title">換算堂數</span>
+            <span class="mc-result" id="mcResult">換 0 堂選修（-0 魔法屋）</span>
+          </div>
+          <input type="range" id="convSlider" min="0" max="20" value="0" step="1">
+          <div class="mc-rule">每5堂魔法屋 換算 1堂選修（1:5）</div>
+        </div>
+      </div>
+
+      <!-- 課程明細 (moved here) -->
+      <div class="card">
+        <div class="card-title">課程明細</div>
+        <div class="breakdown-grid" id="breakdownGrid"></div>
+        <div class="totals-row" id="totalsRow"></div>
+        <div class="price-box">
+          <div class="price-grid">
+            <div class="pv">
+              <div class="pv-label">每堂單價（25分鐘）</div>
+              <div class="pv-val" id="pUnit">—</div>
+              <div class="pv-unit">元/堂</div>
+            </div>
+            <div class="pv-divider"></div>
+            <div class="pv">
+              <div class="pv-label">外師課 ×2（50分）</div>
+              <div class="pv-val" id="pX2">—</div>
+              <div class="pv-unit">元/堂</div>
+            </div>
+            <div class="pv-divider"></div>
+            <div class="pv">
+              <div class="pv-label">外師課 ×3（75分）</div>
+              <div class="pv-val" id="pX3">—</div>
+              <div class="pv-unit">元/堂</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Activity Config Panel -->
+  <div class="act-panel" id="actPanel">
+    <div class="act-header" onclick="toggleActPanel()">
+      <div class="act-title">
+        <span>活動設定</span>
+        <span id="actPanelName" style="font-size:11px;font-weight:400;color:var(--text3)">（未設定）</span>
+      </div>
+      <span class="act-chevron" id="actChevron">▾</span>
+    </div>
+    <div class="act-body" id="actBody" style="display:none">
+      <div class="act-meta">
+        <div class="inp-group">
+          <label class="inp-label">活動名稱</label>
+          <input type="text" id="actName" placeholder="例：暑期限定方案" oninput="onActChange()">
+        </div>
+        <div class="inp-group">
+          <label class="inp-label">活動期間</label>
+          <input type="text" id="actPeriod" placeholder="例：2026/07/01–08/31" oninput="onActChange()">
+        </div>
+      </div>
+      <table class="act-table">
+        <thead>
+          <tr>
+            <th>方案</th>
+            <th>魔法屋（堂）</th>
+            <th>選修（堂）</th>
+            <th>贈品選擇</th>
+            <th>備註</th>
+          </tr>
+        </thead>
+        <tbody id="actTableBody"></tbody>
+      </table>
+      <div class="json-row">
+        <button class="btn primary" onclick="saveToLS()">💾 儲存到本機</button>
+        <button class="btn" onclick="exportJSON()">⬇ 匯出 JSON</button>
+        <button class="btn" onclick="importJSON()">⬆ 匯入 JSON</button>
+        <button class="btn danger" onclick="resetAct()">✕ 重設活動</button>
+        <input type="file" id="jsonFile" accept=".json" style="display:none" onchange="handleFileImport(event)">
+      </div>
+      <div style="font-size:11px;color:var(--text3);margin-top:8px" id="lsSavedAt"></div>
+    </div>
+  </div>
+
+  <!-- ══════════════ 業務參考資訊區 ══════════════ -->
+  <div class="sec-label" style="margin-top:24px;margin-bottom:10px">業務參考資訊</div>
+
+  <!-- 1. 付款 / 分期 / 仲信 -->
+  <div class="ref-panel">
+    <div class="ref-header" onclick="toggleRef('pay')">
+      <div class="ref-title"><span class="ref-icon">💳</span> 付款方式 · 分期 · 仲信貸款</div>
+      <span class="ref-chev" id="chev-pay">▾</span>
+    </div>
+    <div class="ref-body" id="body-pay" style="display:none">
+      <div class="ref-grid3">
+        <div class="ref-card">
+          <div class="ref-card-title">一次付清</div>
+          <div class="ref-item">通道：<strong>智付通（藍新）</strong></div>
+          <div class="ref-item">刷卡手續費：約 <strong>1%–2%</strong>（少量，約幾千元）</div>
+          <div class="ref-item">退費時此手續費<strong>不包含</strong>在退費範圍內</div>
+        </div>
+        <div class="ref-card">
+          <div class="ref-card-title">銀行分期（信用卡）</div>
+          <div class="ref-item">合作銀行：<strong>台新 · 中信 · 國泰世華 · 永豐</strong></div>
+          <div class="ref-item">中信 / 台新：選「智付通（藍新）」通道</div>
+          <div class="ref-item">國泰世華 / 永豐：系統自動導</div>
+          <div class="ref-item">最長 <strong>24 期</strong>，e-token 代墊手續費（退費時扣除）</div>
+          <div class="ref-item ref-note">各行手續費：國泰 ~6%、致富通/中租 ~12–13%</div>
+        </div>
+        <div class="ref-card">
+          <div class="ref-card-title">仲信 / 消費借貸</div>
+          <div class="ref-item">家長向仲信申辦消費借貸，由公司收款</div>
+          <div class="ref-item">退費時需申請<strong>解除消費借貸</strong></div>
+          <div class="ref-item">兩種情境：
+            <div class="ref-sub">① 銀行可整筆刷退（3個月內）：家長先付應扣費用，公司整筆退款</div>
+            <div class="ref-sub">② 銀行不可整筆退：公司補償差額，家長繼續繳完剩餘各期</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. 退費框架 -->
+  <div class="ref-panel">
+    <div class="ref-header" onclick="toggleRef('refund')">
+      <div class="ref-title"><span class="ref-icon">🔄</span> 退費框架</div>
+      <span class="ref-chev" id="chev-refund">▾</span>
+    </div>
+    <div class="ref-body" id="body-refund" style="display:none">
+      <div class="ref-timeline">
+        <div class="ref-tl-item ok">
+          <div class="ref-tl-dot ok"></div>
+          <div class="ref-tl-content">
+            <div class="ref-tl-title">7 天鑑賞期</div>
+            <div class="ref-tl-body">扣除已上課堂數費用（每堂以課單價計），其餘全退。<br>例：課單價 $476，上了 3 堂 → 扣 $1,428，其餘退還</div>
+          </div>
+        </div>
+        <div class="ref-tl-item warn">
+          <div class="ref-tl-dot warn"></div>
+          <div class="ref-tl-content">
+            <div class="ref-tl-title">8 天 – 合約 1/3 期限內（24個月 → 8個月；12個月 → 4個月）</div>
+            <div class="ref-tl-body">
+              扣除 ① 已上課費用 + ② 違約金（剩餘殘值 × <strong>30%</strong>）+ ③ 銀行分期手續費<br>
+              <div class="ref-formula">退還金額 = 總費用 − 已上課費用 − 殘值×30% − 銀行手續費</div>
+              例：總費用 $60,000，上課花 $30,000，剩餘 $30,000 × 70% = <strong>退 $21,000</strong>（再扣手續費）<br>
+              <div class="ref-note" style="margin-top:6px">※ 退費計算：針對<u>剩餘殘值</u>收30%違約金，而非整筆費用的30%，對家長較有利</div>
+            </div>
+          </div>
+        </div>
+        <div class="ref-tl-item danger">
+          <div class="ref-tl-dot danger"></div>
+          <div class="ref-tl-content">
+            <div class="ref-tl-title">超過合約 1/3 期限</div>
+            <div class="ref-tl-body">不受理退費申請</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="ref-grid2" style="margin-top:12px">
+        <div class="ref-card ref-card-warn">
+          <div class="ref-card-title">⚠ 15 堂內退費（業務直接承擔）</div>
+          <div class="ref-item">15 堂以內退費 → 扣到業務自己的錢</div>
+          <div class="ref-item">需業務親自出面處理，積極挽留</div>
+          <div class="ref-item">15 堂後 → 移交客戶助理，業務不承擔</div>
+        </div>
+        <div class="ref-card">
+          <div class="ref-card-title">退費不包含的項目</div>
+          <div class="ref-item">❌ MGM 推薦獎勵堂數</div>
+          <div class="ref-item">❌ 勤學獎勵堂數</div>
+          <div class="ref-item">❌ 當月活動贈送堂數</div>
+          <div class="ref-item">✓ 只計算<strong>付費購買</strong>的堂數殘值</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. 合約導讀重點 -->
+  <div class="ref-panel" style="margin-bottom:32px">
+    <div class="ref-header" onclick="toggleRef('contract')">
+      <div class="ref-title"><span class="ref-icon">📋</span> 合約導讀重點（5分鐘內導完）</div>
+      <span class="ref-chev" id="chev-contract">▾</span>
+    </div>
+    <div class="ref-body" id="body-contract" style="display:none">
+      <div class="ref-grid2">
+        <div>
+          <div class="ref-section-title">導讀流程（8個確認欄）</div>
+          <div class="ref-checklist">
+            <div class="ref-check">
+              <span class="ref-check-num">1</span>
+              <div><strong>課程規格確認</strong>：每堂 25 分鐘（進度班+魔法屋），美國教材系統化安排 1A→1B→2A→2B→複習</div>
+            </div>
+            <div class="ref-check">
+              <span class="ref-check-num">2</span>
+              <div><strong>堂數確認</strong>（第二大點第四小點）：讓家長核對合約上的堂數與業務說明一致</div>
+            </div>
+            <div class="ref-check">
+              <span class="ref-check-num">3</span>
+              <div><strong>請假規則</strong>：課前 <strong>1小時</strong>可請假（優於競品24小時）；每40堂1次請假額度</div>
+            </div>
+            <div class="ref-check">
+              <span class="ref-check-num">4</span>
+              <div><strong>退費機制</strong>（第三大點）：7天鑑賞 / 合約1/3期限內可退70%殘值 / 超過不退</div>
+            </div>
+            <div class="ref-check">
+              <span class="ref-check-num">5</span>
+              <div><strong>個資保護確認</strong>：允許前後台使用個資，共5個基本確認欄</div>
+            </div>
+            <div class="ref-check">
+              <span class="ref-check-num">6</span>
+              <div><strong>費用分期確認欄</strong>：若有退費，銀行端消費借貸解除確認（第3大點下方）</div>
+            </div>
+            <div class="ref-check">
+              <span class="ref-check-num">7</span>
+              <div><strong>最下方總確認</strong>：合計共 <strong>8 個勾選欄</strong></div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="ref-section-title">常見注意事項</div>
+          <div class="ref-infolist">
+            <div class="ref-info-item">
+              <div class="ref-info-label">請假次數上限</div>
+              <div class="ref-info-val">輕鬆學 3次 / 進階學 5次 / 小夢想家 7次 / 大夢想家 ~10次</div>
+            </div>
+            <div class="ref-info-item">
+              <div class="ref-info-label">合約暫停機制</div>
+              <div class="ref-info-val">2年合約最多暫停 <strong>2次</strong>，每次最多 1–2 個月；特殊病況可申請特案</div>
+            </div>
+            <div class="ref-info-item">
+              <div class="ref-info-label">帳號共用</div>
+              <div class="ref-info-val">嚴禁共用帳號或代打，違者停權；同家庭多孩各自獨立帳號</div>
+            </div>
+            <div class="ref-info-item">
+              <div class="ref-info-label">上課時間</div>
+              <div class="ref-info-val">平日 15:00–22:00；週六日 10:00–22:00（學習導師 15:00 起）</div>
+            </div>
+            <div class="ref-info-item">
+              <div class="ref-info-label">公司休假日</div>
+              <div class="ref-info-val">聖誕節、元旦、除夕–初一（其他時間正常上課，含颱風天視行政命令）</div>
+            </div>
+            <div class="ref-info-item">
+              <div class="ref-info-label">發票</div>
+              <div class="ref-info-val">僅電子發票（無實體）；公司戶可開：抬頭、統編 / 培訓費 / 服務費 / 線上課程</div>
+            </div>
+            <div class="ref-info-item">
+              <div class="ref-info-label">課本寄送</div>
+              <div class="ref-info-val">確認寄書地址與郵遞區號；台中區書商分區配送</div>
+            </div>
+            <div class="ref-info-item">
+              <div class="ref-info-label">申請仲信</div>
+              <div class="ref-info-val">20歲以上學員可自行申請仲信；未成年由家長代辦，勿在18歲時提前申請</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const PLANS = [
+  {id:'qingsong',name:'輕鬆學',months:24,jingo:80,elec:15,magic:25,monthly:2850,bizMagic:20,lumElec:5,minPlan:0},
+  {id:'jinjie',  name:'進階學', months:24,jingo:120,elec:25,magic:30,monthly:3850,bizMagic:25,lumElec:8, minPlan:0},
+  {id:'small',   name:'小夢想家',months:24,jingo:160,elec:40,magic:40,monthly:4850,bizMagic:35,lumElec:12,minPlan:0},
+  {id:'big',     name:'大夢想家',months:24,jingo:200,elec:50,magic:45,monthly:5850,bizMagic:45,lumElec:16,minPlan:0},
+  {id:'exp',     name:'體驗學', months:12,jingo:40, elec:5, magic:20,monthly:3200,bizMagic:10,lumElec:0, minPlan:-1}
+];
+
+const DIL_RULES = [
+  {freq:2,minPlanIdx:0,elec:1,magic:5,label:'每週2堂'},
+  {freq:3,minPlanIdx:0,elec:3,magic:5,label:'每週3堂'},
+  {freq:4,minPlanIdx:1,elec:6,magic:10,label:'每週4堂'},
+  {freq:5,minPlanIdx:1,elec:6,magic:10,label:'每週5堂'}
+];
+
+const DEFAULT_ACT = {
+  name:'',period:'',
+  rewards:[
+    {magic:40,elec:8,gift:'magic',note:'限額40名'},
+    {magic:50,elec:10,gift:'magic',note:''},
+    {magic:60,elec:12,gift:'magic',note:''},
+    {magic:90,elec:18,gift:'magic',note:''},
+    {magic:0,elec:0,gift:'magic',note:''}
+  ]
+};
+
+let state = {
+  plan:0, freq:2, wpm:4,
+  biz:false, lump:false, dil:false, act:false, conv:false,
+  convAmt:0,
+  actConfig: JSON.parse(JSON.stringify(DEFAULT_ACT)),
+  actPanelOpen:false
+};
+
+// Load from localStorage
+try {
+  const saved = localStorage.getItem('etaling_activity');
+  if(saved) { state.actConfig = JSON.parse(saved); showToast('已載入上次儲存的活動設定'); }
+} catch(e){}
+
+function toggle(k){
+  state[k] = !state[k];
+  if(k==='conv'&&!state.conv){state.convAmt=0;document.getElementById('convSlider').value=0;}
+  render();
+}
+
+function setWpm(v){
+  state.wpm = v;
+  document.querySelectorAll('.wpm-btn').forEach(b=>b.classList.toggle('active', +b.dataset.wpm === v));
+  render();
+}
+
+function setGift(type){
+  if(!state.actConfig.rewards[state.plan]) return;
+  state.actConfig.rewards[state.plan].gift = type;
+  // sync to activity table if open
+  if(state.actPanelOpen) renderActTable();
+  render();
+}
+
+function toggleActPanel(){
+  state.actPanelOpen = !state.actPanelOpen;
+  document.getElementById('actBody').style.display = state.actPanelOpen ? 'block' : 'none';
+  document.getElementById('actChevron').classList.toggle('open', state.actPanelOpen);
+  if(state.actPanelOpen) renderActTable();
+}
+
+// Build plan buttons
+(function buildPlans(){
+  const g = document.getElementById('planGrid');
+  PLANS.forEach((p,i)=>{
+    const b = document.createElement('div');
+    b.className = 'plan-btn';
+    b.dataset.idx = i;
+    b.innerHTML = `<span class="pn">${p.name}</span><span class="pm">${p.months}個月</span><span class="pp">${p.monthly.toLocaleString()}元/月</span>`;
+    b.onclick = ()=>{ state.plan=i; render(); };
+    g.appendChild(b);
+  });
+})();
+
+// Event listeners
+document.getElementById('freqSlider').addEventListener('input', e=>{
+  state.freq = +e.target.value;
+  document.getElementById('freqVal').textContent = state.freq + ' 堂/週';
+  render();
+});
+document.getElementById('convSlider').addEventListener('input', e=>{
+  state.convAmt = +e.target.value;
+  render();
+});
+
+function onActChange(){
+  state.actConfig.name = document.getElementById('actName').value;
+  state.actConfig.period = document.getElementById('actPeriod').value;
+  updateActPanelLabel();
+  render();
+}
+
+function updateActPanelLabel(){
+  const n = state.actConfig.name;
+  document.getElementById('actPanelName').textContent = n ? `（${n}${state.actConfig.period?' · '+state.actConfig.period:''}）` : '（未設定）';
+}
+
+function renderActTable(){
+  document.getElementById('actName').value = state.actConfig.name || '';
+  document.getElementById('actPeriod').value = state.actConfig.period || '';
+  const tbody = document.getElementById('actTableBody');
+  tbody.innerHTML = '';
+  PLANS.forEach((p,i)=>{
+    const r = state.actConfig.rewards[i] || {magic:0,elec:0,gift:'magic',note:''};
+    const isNa = i===4; // 體驗學
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><span class="plan-badge">${p.name}</span></td>
+      <td><input type="number" min="0" value="${r.magic}" ${isNa?'disabled':''} data-plan="${i}" data-field="magic" style="width:70px"></td>
+      <td><input type="number" min="0" value="${r.elec}" ${isNa?'disabled':''} data-plan="${i}" data-field="elec" style="width:70px"></td>
+      <td>
+        ${isNa ? '<span style="color:var(--text3);font-size:11px">無加贈</span>' : `
+        <select data-plan="${i}" data-field="gift" style="padding:4px 6px;border:0.5px solid var(--border2);border-radius:5px;font-size:12px;background:var(--surface);color:var(--text)">
+          <option value="magic" ${r.gift==='magic'?'selected':''}>魔法屋</option>
+          <option value="elec" ${r.gift==='elec'?'selected':''}>選修課</option>
+        </select>`}
+      </td>
+      <td><input type="text" value="${r.note||''}" ${isNa?'disabled':''} data-plan="${i}" data-field="note" placeholder="備註" style="width:100px"></td>
+    `;
+    tbody.appendChild(tr);
+  });
+  tbody.querySelectorAll('input,select').forEach(el=>{
+    el.addEventListener('input', e=>{
+      const pi = +e.target.dataset.plan, field = e.target.dataset.field;
+      if(!state.actConfig.rewards[pi]) state.actConfig.rewards[pi]={magic:0,elec:0,gift:'magic',note:''};
+      const val = (field==='magic'||field==='elec') ? (+e.target.value||0) : e.target.value;
+      state.actConfig.rewards[pi][field] = val;
+      render();
+    });
+  });
+  // Show saved time
+  const ls = localStorage.getItem('etaling_activity_ts');
+  document.getElementById('lsSavedAt').textContent = ls ? '最後儲存：'+ls : '';
+}
+
+function saveToLS(){
+  localStorage.setItem('etaling_activity', JSON.stringify(state.actConfig));
+  localStorage.setItem('etaling_activity_ts', new Date().toLocaleString('zh-TW'));
+  document.getElementById('lsSavedAt').textContent = '最後儲存：'+new Date().toLocaleString('zh-TW');
+  showToast('已儲存到本機');
+}
+
+function exportJSON(){
+  const blob = new Blob([JSON.stringify(state.actConfig, null, 2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'etaling_activity_' + (state.actConfig.name||'config') + '.json';
+  a.click();
+  showToast('JSON 已匯出');
+}
+
+function importJSON(){
+  document.getElementById('jsonFile').click();
+}
+
+function handleFileImport(e){
+  const f = e.target.files[0]; if(!f) return;
+  const reader = new FileReader();
+  reader.onload = ev=>{
+    try {
+      const data = JSON.parse(ev.target.result);
+      // Support both formats: single activity (direct) or activities array (marketing.json)
+      let actData = null;
+      if(data.rewards){
+        actData = data; // direct format
+      } else if(data.activities && Array.isArray(data.activities) && data.activities.length>0){
+        // marketing.json format — pick first activity or show picker
+        if(data.activities.length===1){
+          actData = data.activities[0];
+        } else {
+          const names = data.activities.map((a,i)=>`${i+1}. ${a.name}（${a.period}）`).join('\n');
+          const pick = prompt('檔案包含多個活動，請輸入編號選擇：\n'+names, '1');
+          const idx = Math.max(0, Math.min(data.activities.length-1, (+pick||1)-1));
+          actData = data.activities[idx];
+        }
+      } else {
+        throw new Error('格式不符：找不到 rewards 或 activities 欄位');
+      }
+      if(!actData.rewards) throw new Error('活動資料缺少 rewards 欄位');
+      state.actConfig = {
+        name: actData.name||'',
+        period: actData.period||'',
+        rewards: actData.rewards
+      };
+      if(state.actPanelOpen) renderActTable();
+      updateActPanelLabel();
+      render();
+      showToast(`已載入：${actData.name||'活動'}`);
+    } catch(err){ showToast('匯入失敗：'+err.message); }
+  };
+  reader.readAsText(f);
+  e.target.value='';
+}
+
+function resetAct(){
+  if(!confirm('確定要重設活動設定嗎？')) return;
+  state.actConfig = JSON.parse(JSON.stringify(DEFAULT_ACT));
+  state.actConfig.name=''; state.actConfig.period='';
+  if(state.actPanelOpen) renderActTable();
+  updateActPanelLabel();
+  render();
+  showToast('活動已重設');
+}
+
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2000);
+}
+
+function getConvMax(magic){ return Math.floor(magic/5); }
+
+function render(){
+  const p = PLANS[state.plan];
+  // Plan buttons
+  document.querySelectorAll('.plan-btn').forEach((b,i)=>b.classList.toggle('active',i===state.plan));
+
+  // Compute bonuses
+  let jingo = p.jingo;
+  let elec  = p.elec, elecBonuses = [];
+  let magic = p.magic, magicBonuses = [];
+
+  // Biz
+  setSw('biz', state.biz);
+  if(state.biz){ magic+=p.bizMagic; magicBonuses.push({v:p.bizMagic,label:'業權'}); }
+  const bizBadge = document.getElementById('bizBadge');
+  bizBadge.textContent = '+'+p.bizMagic+'魔法屋';
+  bizBadge.style.display = 'inline';
+  document.getElementById('bizSub').textContent = '加贈 '+p.bizMagic+' 堂魔法屋';
+
+  // Lump
+  setSw('lump', state.lump);
+  const lumpBadge = document.getElementById('lumpBadge');
+  if(p.lumElec>0){
+    lumpBadge.textContent = '+'+p.lumElec+'選修';
+    lumpBadge.style.display='inline';
+    document.getElementById('lumpSub').textContent = '加贈 '+p.lumElec+' 堂選修';
+    if(state.lump){ elec+=p.lumElec; elecBonuses.push({v:p.lumElec,label:'一付'}); }
+  } else {
+    lumpBadge.style.display='none';
+    document.getElementById('lumpSub').textContent = '此方案無加贈';
+  }
+
+  // Activity
+  const ar = state.actConfig.rewards[state.plan]||{magic:0,elec:0,gift:'magic',note:''};
+  const actHasReward = (ar.magic>0||ar.elec>0) && state.plan<4;
+  const actLabel = state.actConfig.name || '活動加贈';
+  document.getElementById('actToggleLabel').textContent = actLabel;
+  setSw('act', state.act);
+  const actBadge = document.getElementById('actBadge');
+  const giftRow  = document.getElementById('giftSelectorRow');
+
+  if(actHasReward){
+    const giftV = ar.gift==='magic' ? ar.magic : ar.elec;
+    const giftT = ar.gift==='magic' ? '魔法屋' : '選修';
+    actBadge.textContent = '+'+giftV+giftT;
+    actBadge.style.display='inline';
+    document.getElementById('actToggleSub').textContent = `${ar.magic}魔法屋 或 ${ar.elec}選修（擇一）`;
+
+    // Show gift selector row and update button states
+    giftRow.style.display = 'block';
+    document.getElementById('giftMagicVal').textContent = ar.magic > 0 ? '+'+ar.magic+'堂' : '';
+    document.getElementById('giftElecVal').textContent  = ar.elec  > 0 ? '+'+ar.elec+'堂'  : '';
+    document.getElementById('giftOptMagic').classList.toggle('active', ar.gift==='magic');
+    document.getElementById('giftOptElec').classList.toggle('active',  ar.gift==='elec');
+    // Disable if no reward for that type
+    document.getElementById('giftOptMagic').disabled = ar.magic === 0;
+    document.getElementById('giftOptElec').disabled  = ar.elec  === 0;
+
+    if(state.act){
+      if(ar.gift==='magic'){ magic+=ar.magic; magicBonuses.push({v:ar.magic,label:actLabel}); }
+      else { elec+=ar.elec; elecBonuses.push({v:ar.elec,label:actLabel}); }
+    }
+  } else {
+    actBadge.style.display='none';
+    giftRow.style.display = 'none';
+    document.getElementById('actToggleSub').textContent = state.plan===4?'體驗學不適用':'請於活動設定配置';
+  }
+
+  // Diligence
+  const dRule = DIL_RULES.find(r=>r.freq===state.freq);
+  const dilOk = dRule && state.plan >= dRule.minPlanIdx && state.plan < 4;
+  const dilRow = document.getElementById('dilRow');
+  dilRow.classList.toggle('disabled', !dilOk);
+  setSw('dil', state.dil && dilOk);
+  const dilNote = document.getElementById('dilNote');
+  const dilBadge = document.getElementById('dilBadge');
+  if(dRule && dilOk){
+    dilBadge.textContent = '+'+dRule.elec+'選修 +'+dRule.magic+'魔法屋';
+    dilBadge.style.display='inline';
+    document.getElementById('dilSub').textContent = dRule.label+'，連續8週出席';
+    if(state.dil){
+      elec+=dRule.elec; elecBonuses.push({v:dRule.elec,label:'勤學'});
+      magic+=dRule.magic; magicBonuses.push({v:dRule.magic,label:'勤學'});
+    }
+    dilNote.style.display='none';
+  } else {
+    dilBadge.style.display='none';
+    let msg='';
+    if(state.freq===1) msg='每週至少2堂才符合勤學活動資格';
+    else if(state.plan===4) msg='體驗學不參與勤學活動';
+    else if(dRule && state.plan < dRule.minPlanIdx) msg='此頻率勤學活動需選進階學以上方案';
+    if(msg){
+      dilNote.style.display='block';
+      dilNote.innerHTML = `<div class="dil-badge warn"><span class="dil-dot"></span>${msg}</div>`;
+    } else { dilNote.style.display='none'; }
+    document.getElementById('dilSub').textContent='連續8週出席加贈';
+  }
+
+  // Conversion
+  setSw('conv', state.conv);
+  const convPanel = document.getElementById('magicConvPanel');
+  const convSlider = document.getElementById('convSlider');
+  convPanel.style.display = state.conv ? 'block' : 'none';
+  if(state.conv){
+    const maxConv = getConvMax(magic);
+    convSlider.max = maxConv;
+    if(state.convAmt > maxConv) state.convAmt = maxConv;
+    convSlider.value = state.convAmt;
+    document.getElementById('mcResult').textContent =
+      '換 '+state.convAmt+' 堂選修（-'+(state.convAmt*5)+' 魔法屋）';
+    if(state.convAmt>0){
+      magic -= state.convAmt*5; magicBonuses.push({v:-state.convAmt*5,label:'換選修',neg:true});
+      elec  += state.convAmt;   elecBonuses.push({v:state.convAmt,label:'換算'});
+    }
+  }
+
+  // Breakdown display
+  const breakdown = document.getElementById('breakdownGrid');
+  breakdown.innerHTML = '';
+  [[jingo,[],'進度班'],[elec,elecBonuses,'選修課'],[magic,magicBonuses,'魔法屋']].forEach(([val,bonuses,label])=>{
+    const base = label==='進度班'?p.jingo:label==='選修課'?p.elec:p.magic;
+    let formulaHTML = `<span class="base">${base}</span>`;
+    bonuses.forEach(b=>{
+      if(b.neg) formulaHTML += ` <span class="minus">−${Math.abs(b.v)}</span><span class="eq" style="font-size:10px">(${b.label})</span>`;
+      else formulaHTML += ` <span class="eq">+</span> <span class="bonus">${b.v}</span><span class="eq" style="font-size:10px">(${b.label})</span>`;
+    });
+    if(bonuses.length>0) formulaHTML += ` <span class="eq">=</span> <span class="total">${val}堂</span>`;
+    else formulaHTML += `<span class="total"> ${val}堂</span>`;
+    breakdown.innerHTML += `<div class="bc"><div class="bc-label">${label}</div><div class="bc-formula">${formulaHTML}</div></div>`;
+  });
+
+  // Totals
+  const total = jingo + elec + magic;
+  const totalPrice = p.monthly * p.months;
+  const unit = totalPrice / total;
+  const totals = document.getElementById('totalsRow');
+  totals.innerHTML = `
+    <div class="tc"><div class="tc-label">總堂數</div><div class="tc-val">${total.toLocaleString()}<span class="tc-unit"> 堂</span></div></div>
+    <div class="tc"><div class="tc-label">使用月數</div><div class="tc-val">${p.months}<span class="tc-unit"> 月</span></div></div>
+    <div class="tc"><div class="tc-label">總費用</div><div class="tc-val">${totalPrice.toLocaleString()}<span class="tc-unit"> 元</span></div></div>
+  `;
+
+  // Prices
+  document.getElementById('pUnit').textContent = '$'+Math.round(unit);
+  document.getElementById('pX2').textContent   = '$'+Math.round(unit*2);
+  document.getElementById('pX3').textContent   = '$'+Math.round(unit*3);
+
+  // Book progress
+  renderBookProgress(p, state.freq);
+
+  // Activity toggle label sync
+  document.getElementById('actToggleLabel').textContent = actLabel;
+  updateActPanelLabel();
+}
+
+function renderBookProgress(p, freq){
+  const LESSONS_PER_BOOK = 80;
+  const WPM = state.wpm; // 使用者選擇：4 / 4.35 / 5 週/月
+
+  // A → B：按此頻率，進度班幾個月燒完？
+  const monthsToExhaust = p.jingo / (freq * WPM);
+  const exhaustMonth    = Math.ceil(monthsToExhaust);
+
+  // B → A：合約期滿，按此頻率共消耗幾堂？（核心比較數字）
+  const demandedTotal = Math.round(freq * WPM * p.months);
+
+  // 狀態
+  const isTooSlow  = monthsToExhaust > p.months;  // ⚠ 歸零風險
+  const isFastPace = monthsToExhaust < p.months;  // 💡 空窗 / 升級機會
+  const isPerfect  = !isTooSlow && !isFastPace;
+  const surplusMonths = monthsToExhaust - p.months;
+  const vacantMonths  = p.months - monthsToExhaust;
+
+  // 每冊需多少月
+  const monthsPerBook = LESSONS_PER_BOOK / (freq * WPM);
+  const booksInPlan   = p.jingo / LESSONS_PER_BOOK;
+
+  // 升級建議（空窗時）
+  const upgIdx  = isFastPace ? PLANS.findIndex((q,i) => i > state.plan && (q.jingo/(freq*WPM)) >= p.months) : -1;
+  const upgPlan = upgIdx >= 0 ? PLANS[upgIdx] : null;
+
+  // chips：按方案冊數顯示完成時間
+  let chips = '';
+  for(let i = 1; i <= Math.ceil(booksInPlan + 0.001); i++){
+    const needsBy = i * LESSONS_PER_BOOK / (freq * WPM);
+    if(i * LESSONS_PER_BOOK <= p.jingo){
+      chips += `<span class="book-chip full">第${i}冊 ≈${needsBy.toFixed(1)}月</span>`;
+    } else {
+      const partial = Math.round((p.jingo % LESSONS_PER_BOOK) / LESSONS_PER_BOOK * 100);
+      chips += `<span class="book-chip partial">第${i}冊 ${partial||100}%</span>`;
+    }
+  }
+
+  // 進度條
+  const barPct   = Math.min(100, (monthsToExhaust / p.months * 100)).toFixed(1);
+  const barColor = isTooSlow ? 'var(--amber)' : isFastPace ? 'var(--blue)' : 'var(--green)';
+
+  // A→B 狀態文字
+  const dirAColor  = isTooSlow ? 'var(--amber)' : 'var(--green)';
+  const dirAStatus = isTooSlow
+    ? `${monthsToExhaust.toFixed(1)} 月 > ${p.months}月合約 ⚠ 歸零風險`
+    : isFastPace
+      ? `${monthsToExhaust.toFixed(1)} 月 < ${p.months}月合約 💡 有空窗`
+      : `${monthsToExhaust.toFixed(1)} 月 ≈ ${p.months}月合約 ✓`;
+
+  // B→A：比較符號與說明（demandedTotal vs 方案供給）
+  let baSymbol, baSymbolColor, baNote, baDirClass;
+  if(demandedTotal > p.jingo){
+    baSymbol      = '>';
+    baSymbolColor = 'var(--blue)';
+    baNote        = `💡 超出方案 ${demandedTotal - p.jingo} 堂，進度班提早用完（空窗）`;
+    baDirClass    = '';
+  } else if(demandedTotal < p.jingo){
+    baSymbol      = '<';
+    baSymbolColor = 'var(--amber)';
+    baNote        = `⚠ 合約期內僅消耗 ${demandedTotal} 堂，剩餘 ${p.jingo - demandedTotal} 堂合約到期歸零`;
+    baDirClass    = 'warn';
+  } else {
+    baSymbol      = '=';
+    baSymbolColor = 'var(--green)';
+    baNote        = '✓ 完美消耗，無空窗無歸零';
+    baDirClass    = 'ok';
+  }
+
+  // 警示區塊
+  let warnHTML = '';
+  if(isTooSlow){
+    const excessLessons = Math.round(surplusMonths * freq * WPM);
+    warnHTML = `
+      <div class="bp-overflow-warn">
+        <div class="bow-header">
+          <span class="bow-icon">⚠</span>
+          <span class="bow-title">消耗速度太慢，合約到期仍有剩餘堂數將歸零</span>
+        </div>
+        <div class="bow-detail">
+          按 <strong>${freq}堂/週 × ${WPM}週/月</strong>，${p.jingo} 堂需 <strong>${monthsToExhaust.toFixed(1)} 個月</strong>才能用完，
+          超出合約 <strong>${surplusMonths.toFixed(1)} 個月</strong>，
+          約 <strong>${excessLessons} 堂</strong>會在合約到期時歸零。建議提高上課頻率。
+        </div>
+      </div>`;
+  } else if(isFastPace){
+    const vacantText = vacantMonths >= 1 ? `${vacantMonths.toFixed(1)} 個月` : `${Math.round(vacantMonths*WPM)} 週`;
+    warnHTML = `
+      <div class="bp-overflow-warn" style="border-color:rgba(24,95,165,.3)">
+        <div class="bow-header" style="background:var(--blue-light)">
+          <span class="bow-icon" style="color:var(--blue)">💡</span>
+          <span class="bow-title" style="color:var(--blue)">進度班提前用完（空窗 ${vacantText}），是升級切入點</span>
+        </div>
+        <div class="bow-detail" style="border-color:rgba(24,95,165,.15)">
+          按此頻率，合約期內共需消耗 <strong>${demandedTotal} 堂</strong>進度班，
+          但方案僅含 <strong>${p.jingo} 堂</strong>，
+          約在 <strong>第 ${exhaustMonth} 個月</strong>用完（合約共 ${p.months} 月）。
+          空窗期 <strong>${vacantText}</strong>可主動引導升級更高堂數方案。
+        </div>
+        ${upgPlan ? `
+        <div class="bow-upgrade" onclick="upgradeTo(${upgIdx})">
+          升級至「${upgPlan.name}」→ 進度班 ${upgPlan.jingo} 堂，可撐滿整個 ${p.months} 個月合約
+          <span class="bow-arrow">→</span>
+        </div>` : `
+        <div class="bow-upgrade-none">大夢想家（${PLANS[3].jingo}堂）為最高方案，仍有空窗可搭配加購或協助調整頻率。</div>`}
+      </div>`;
+  } else {
+    warnHTML = `<div class="dil-badge" style="margin-top:8px">
+      <span class="dil-dot"></span>進度班消耗速度與合約期完美匹配，無空窗、無歸零風險
+    </div>`;
+  }
+
+  document.getElementById('bookProgress').innerHTML = `
+    <div class="bp-title">📖 進度班消耗推算（每冊 ${LESSONS_PER_BOOK} 堂 · ${WPM}週/月）</div>
+    <div class="bp-bidir">
+      <div class="bp-dir ${isTooSlow?'warn':isPerfect?'ok':''}">
+        <span class="bp-dir-label">A → B　進度班能撐幾個月？</span>
+        <span class="bp-dir-val" style="color:${dirAColor}">${dirAStatus}</span>
+        <div class="bp-formula">${p.jingo}堂 ÷ (${freq}堂/週 × ${WPM}週/月) = ${monthsToExhaust.toFixed(1)} 月</div>
+      </div>
+      <div class="bp-dir ${baDirClass}">
+        <span class="bp-dir-label">B → A　合約期內按頻率消耗幾堂？</span>
+        <div class="bidir-row">
+          <span class="bidir-consumed">${demandedTotal}堂</span>
+          <span style="font-size:18px;font-weight:700;color:${baSymbolColor};padding:0 4px">${baSymbol}</span>
+          <div style="display:flex;flex-direction:column">
+            <span style="font-size:12px;font-weight:700;color:var(--text2)">${p.name}</span>
+            <span style="font-size:16px;font-weight:700;color:var(--text2)">${p.jingo} 堂</span>
+          </div>
+        </div>
+        <div style="font-size:11px;color:${baSymbolColor};font-weight:500;margin-bottom:4px">${baNote}</div>
+        <div class="bp-formula">${freq}堂/週 × ${WPM}週/月 × ${p.months}月 = ${demandedTotal} 堂</div>
+      </div>
+    </div>
+    <div class="bp-row" style="margin-top:10px">
+      <span class="bp-label">每完成 1 冊需要</span>
+      <span class="bp-val">${monthsPerBook.toFixed(1)} 個月（${(LESSONS_PER_BOOK/freq).toFixed(0)} 週）</span>
+    </div>
+    <div class="bp-row">
+      <span class="bp-label">方案共含進度班</span>
+      <span class="bp-val">${booksInPlan % 1 === 0 ? booksInPlan : booksInPlan.toFixed(2)} 冊</span>
+    </div>
+    <div class="bp-bar-wrap" style="margin-top:10px">
+      <div class="bp-bar-label">
+        <span>第0月</span>
+        ${isFastPace ? `<span style="color:var(--blue);font-weight:600">⚑ 第${exhaustMonth}月用完</span>` : ''}
+        ${isTooSlow ? `<span style="color:var(--amber);font-weight:600">第${p.months}月合約到期</span>` : ''}
+        <span>第${p.months}月</span>
+      </div>
+      <div class="bp-bar">
+        <div class="bp-bar-fill" style="width:${barPct}%;background:${barColor}"></div>
+        ${isFastPace ? `<div class="bp-bar-cap" style="left:${barPct}%"></div>` : ''}
+      </div>
+      ${isFastPace ? `
+      <div style="display:flex;font-size:10px;margin-top:3px;gap:8px">
+        <span style="color:var(--blue)">← 進度班 ${monthsToExhaust.toFixed(1)} 月 →</span>
+        <span style="color:var(--text3)">← 空窗 ${vacantMonths.toFixed(1)} 月 →</span>
+      </div>` : isTooSlow ? `
+      <div style="font-size:10px;margin-top:3px;color:var(--amber)">
+        合約 ${p.months} 月內消耗 ${demandedTotal} 堂，超出 ${surplusMonths.toFixed(1)} 月份量將歸零
+      </div>` : ''}
+    </div>
+    <div class="bp-books" style="margin-top:8px">${chips}</div>
+    ${warnHTML}
+  `;
+}
+
+function toggleRef(k){
+  const body = document.getElementById('body-'+k);
+  const chev = document.getElementById('chev-'+k);
+  const open = body.style.display === 'none';
+  body.style.display = open ? 'block' : 'none';
+  chev.classList.toggle('open', open);
+}
+
+function upgradeTo(idx){
+  state.plan = idx;
+  render();
+  document.getElementById('planGrid').scrollIntoView({behavior:'smooth',block:'nearest'});
+  showToast('已切換至「'+PLANS[idx].name+'」');
+}
+
+function setSw(k, on){
+  const el = document.getElementById('sw-'+k);
+  if(el) el.classList.toggle('on', on);
+}
+
+render();
+</script>
+</body>
+</html>
